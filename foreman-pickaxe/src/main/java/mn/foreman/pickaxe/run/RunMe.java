@@ -17,6 +17,7 @@ import mn.foreman.pickaxe.configuration.Configuration;
 import mn.foreman.pickaxe.miners.MinerConfiguration;
 import mn.foreman.pickaxe.miners.remote.RemoteConfiguration;
 import mn.foreman.pickaxe.process.HttpPostMetricsProcessingStrategy;
+import mn.foreman.pickaxe.process.TelegrafHttpPostMetricsProcessingStrategy;
 import mn.foreman.pickaxe.process.MetricsProcessingStrategy;
 import mn.foreman.util.VersionUtils;
 
@@ -145,6 +146,11 @@ public class RunMe {
         final MetricsSender metricsSender =
                 new MetricsSenderImpl(
                         metricsProcessingStrategy);
+        
+        final MetricsSender telegrafmetricsSender = 
+        		new MetricsSenderImpl(
+        				new TelegrafHttpPostMetricsProcessingStrategy(
+        						"http://localhost:8085/"));
 
         startConfigQuerying();
         startUpdateMiners();
@@ -166,10 +172,14 @@ public class RunMe {
                             200);
             batches
                     .parallelStream()
-                    .forEach(batch ->
+                    .forEach(batch -> {
                             metricsSender.sendMetrics(
                                     batch.getBatchTime(),
-                                    batch.getBatch()));
+                                    batch.getBatch());
+                            telegrafmetricsSender.sendMetrics(
+                            		batch.getBatchTime(), 
+                            		batch.getBatch());
+                    });
             final long now = System.currentTimeMillis();
             if (now < deadline) {
                 try {

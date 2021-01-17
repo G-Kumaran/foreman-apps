@@ -26,6 +26,6 @@ public class BigDecimalSerializer
         if (value.precision() > MAX_PRECISION) {
             value = value.setScale(MAX_PRECISION, BigDecimal.ROUND_UP);
         }
-        generator.writeString(value.toPlainString());
+        generator.writeNumber(value);
     }
 }
